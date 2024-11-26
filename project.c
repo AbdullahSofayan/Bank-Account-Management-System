@@ -234,6 +234,62 @@ void deleteAccount() {
     }
 }
 
+void deleteHolderAccounts() {
+    char holderName[MAX_NAME_LENGTH];
+    int found = 0;
+
+    // Prompt the user for the holder's name
+    getchar(); // Consume the leftover newline
+    printf("Enter the holder name to delete all accounts: ");
+    fgets(holderName, MAX_NAME_LENGTH, stdin);
+    holderName[strcspn(holderName, "\n")] = 0; // Remove trailing newline
+
+    // Validate the holder's name
+    if (!isValidName(holderName)) {
+        printf("Invalid name. Only alphabetic characters are allowed.\n");
+        return;
+    }
+
+    FILE *file = fopen(FILENAME, "rb");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    FILE *tempFile = fopen("temp.dat", "wb");
+    if (tempFile == NULL) {
+        printf("Error opening temporary file.\n");
+        fclose(file);
+        return;
+    }
+
+    struct Account acc;
+
+    // Iterate through all accounts, writing only non-matching ones to the temp file
+    while (fread(&acc, sizeof(struct Account), 1, file)) {
+        if (strcmp(acc.holderName, holderName) != 0) {
+            fwrite(&acc, sizeof(struct Account), 1, tempFile);
+        } else {
+            found = 1;
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    if (found) {
+        // Replace the original file with the temp file
+        remove(FILENAME);
+        rename("temp.dat", FILENAME);
+        printf("All accounts for holder '%s' have been deleted.\n", holderName);
+    } else {
+        // If no accounts matched, remove the temp file
+        remove("temp.dat");
+        printf("No accounts found for holder '%s'.\n", holderName);
+    }
+}
+
+
 void searchAccount() {
     long accountNumber;
     printf("Enter account number to search: ");
@@ -352,7 +408,7 @@ int getValidChoice() {
             clearInputBuffer(); // Clear input buffer
         } else {
             // Check if the choice is within the valid range
-            if (choice >= 1 && choice <= 7) {
+            if (choice >= 1 && choice <= 8) {
                 return choice;
             } else {
                 printf("Invalid choice! Please enter a number between 1 and 7.\n");
@@ -374,7 +430,8 @@ int main() {
         printf("4. Search Account\n");
         printf("5. Display All Accounts\n");
         printf("6. Add Operation (Deposit/Withdraw)\n");
-        printf("7. Exit\n");
+        printf("7. Delete Holder Accounts\n");
+        printf("8. Exit\n\n"); 
 
         // Validate user input for menu choice
         printf("Enter your choice: ");
@@ -432,7 +489,10 @@ int main() {
                 }
                 break;
             case 7:
-                printf("Exiting program.\n");
+                deleteHolderAccounts();  // Delete all accounts for a holder name
+                break;
+            case 8:
+                 printf("Exiting program.\n");
                 exit(0);  // Exit the program
                 break;
             default:
