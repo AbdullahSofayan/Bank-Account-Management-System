@@ -1,160 +1,168 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <stdio.h>    // Provides functions for input/output operations (e.g., printf, scanf, fopen).
+#include <stdlib.h>   // Provides functions for memory allocation, process control, conversions, etc. (e.g., malloc, exit).
+#include <string.h>   // Provides functions to handle strings (e.g., strlen, strcpy, strcmp).
+#include <ctype.h>    // Provides character handling functions (e.g., isalpha, isdigit).
 
-#define MAX_NAME_LENGTH 100
-#define MAX_EMAIL_LENGTH 100
-#define MAX_OPERATIONS 100
-#define FILENAME "accounts.dat"
+// Define the maximum length for names and email strings.
+#define MAX_NAME_LENGTH 100   // Maximum length for a holder's name.
+#define MAX_EMAIL_LENGTH 100  // Maximum length for an email address.
+#define MAX_OPERATIONS 100    // Maximum number of operations (e.g., deposits/withdrawals) per account.
+#define FILENAME "accounts.dat" // Name of the binary file used to store account information.
 
-// Define the structure for each operation (deposit or withdrawal)
+// Define the structure for each operation (deposit or withdrawal).
 struct Operation {
-    char operation; // 'd' for deposit, 'w' for withdrawal
-    double amount;
+    char operation; // Operation type: 'd' for deposit, 'w' for withdrawal.
+    double amount;  // Amount of the operation.
 };
 
-// Define the structure for the bank account
+// Define the structure for the bank account.
 struct Account {
-    long accountNumber;
-    double balance;
-    char holderName[MAX_NAME_LENGTH];
-    char email[MAX_EMAIL_LENGTH];
-    int numOperations;
-    struct Operation operations[MAX_OPERATIONS];
+    long accountNumber;                  // Unique account number.
+    double balance;                      // Current account balance.
+    char holderName[MAX_NAME_LENGTH];    // Name of the account holder.
+    char email[MAX_EMAIL_LENGTH];       // Email address of the account holder.
+    int numOperations;                  // Number of operations performed on the account.
+    struct Operation operations[MAX_OPERATIONS]; // Array to store operations.
 };
 
-// Function prototypes
-int isValidName(char* name);
-int isValidEmail(char* email);
-int isValidAmount(double amount);
-void addAccount();
-void updateAccount();
-void deleteAccount();
-void deleteHolderAccounts();
-void searchAccount();
-void displayAllAccounts();
-void addOperation(long accountNumber, char operation, double amount);
-void saveAccount(struct Account* acc);
-int accountExists(long accountNumber);
-void loadAccounts();
-void displayAccount(struct Account* acc);
+// Function prototypes to declare functions used in the program.
+int isValidName(char* name);               // Check if a name is valid (only alphabetic and spaces).
+int isValidEmail(char* email);             // Check if an email format is valid.
+int isValidAmount(double amount);          // Check if an amount is valid (positive value).
+void addAccount();                         // Add a new account to the system.
+void updateAccount();                      // Update details of an existing account.
+void deleteAccount();                      // Delete a specific account by account number.
+void deleteHolderAccounts();               // Delete all accounts associated with a holder's name.
+void searchAccount();                      // Search for an account by its account number.
+void displayAllAccounts();                 // Display all accounts stored in the system.
+void addOperation(long accountNumber, char operation, double amount); // Add a deposit or withdrawal operation to an account.
+void saveAccount(struct Account* acc);     // Save an account to the binary file.
+int accountExists(long accountNumber);     // Check if an account exists in the system.
+void loadAccounts();                       // Load accounts from the binary file.
+void displayAccount(struct Account* acc);  // Display details of a specific account.
 
+// Implementation of the function to validate a name.
 int isValidName(char* name) {
-    for (int i = 0; i < strlen(name); i++) {
-        if (!isalpha(name[i]) && name[i] != ' ') {
-            return 0; // Invalid name (non-alphabetical character found)
+    for (int i = 0; i < strlen(name); i++) { // Iterate through each character in the name.
+        if (!isalpha(name[i]) && name[i] != ' ') { // Check if character is alphabetic or a space.
+            return 0; // Return 0 if the name contains invalid characters.
         }
     }
-    return 1;
+    return 1; // Return 1 if the name is valid.
 }
 
+// Implementation of the function to validate an email address.
 int isValidEmail(char* email) {
-    int atCount = 0, dotCount = 0;
-    for (int i = 0; i < strlen(email); i++) {
-        if (email[i] == '@') atCount++;
-        if (email[i] == '.') dotCount++;
+    int atCount = 0, dotCount = 0; // Initialize counters for '@' and '.' symbols.
+    for (int i = 0; i < strlen(email); i++) { // Iterate through each character in the email.
+        if (email[i] == '@') atCount++;  // Count '@' symbols.
+        if (email[i] == '.') dotCount++; // Count '.' symbols.
     }
-    return (atCount == 1 && dotCount >= 1);
+    return (atCount == 1 && dotCount >= 1); // Return true if one '@' and at least one '.' are present.
 }
 
+// Implementation of the function to validate a monetary amount.
 int isValidAmount(double amount) {
-    return amount > 0;
+    return amount > 0; // Return true if the amount is positive.
 }
 
+// Implementation of the function to add a new account.
 void addAccount() {
-    struct Account newAccount;
+    struct Account newAccount; // Create a new account structure.
     
-    printf("Enter account number: ");
-    scanf("%ld", &newAccount.accountNumber);
+    printf("Enter account number: "); // Prompt the user for an account number.
+    scanf("%ld", &newAccount.accountNumber); // Read the account number.
     
-    if (accountExists(newAccount.accountNumber)) {
+    if (accountExists(newAccount.accountNumber)) { // Check if the account already exists.
         printf("Account number already exists.\n");
-        return;
+        return; // Exit the function if the account exists.
     }
     
-    getchar(); // Consume newline
-    printf("Enter account holder name: ");
-    fgets(newAccount.holderName, MAX_NAME_LENGTH, stdin);
-    newAccount.holderName[strcspn(newAccount.holderName, "\n")] = 0; // Remove newline
+    getchar(); // Consume leftover newline from input buffer.
+    printf("Enter account holder name: "); // Prompt for the account holder's name.
+    fgets(newAccount.holderName, MAX_NAME_LENGTH, stdin); // Read the holder's name.
+    newAccount.holderName[strcspn(newAccount.holderName, "\n")] = 0; // Remove newline from input.
     
-    if (!isValidName(newAccount.holderName)) {
+    if (!isValidName(newAccount.holderName)) { // Validate the holder's name.
         printf("Invalid name. Only alphabetic characters are allowed.\n");
-        return;
+        return; // Exit the function if the name is invalid.
     }
 
-    printf("Enter email address: ");
-    fgets(newAccount.email, MAX_EMAIL_LENGTH, stdin);
-    newAccount.email[strcspn(newAccount.email, "\n")] = 0; // Remove newline
+    printf("Enter email address: "); // Prompt for the account holder's email.
+    fgets(newAccount.email, MAX_EMAIL_LENGTH, stdin); // Read the email address.
+    newAccount.email[strcspn(newAccount.email, "\n")] = 0; // Remove newline from input.
     
-    if (!isValidEmail(newAccount.email)) {
+    if (!isValidEmail(newAccount.email)) { // Validate the email address.
         printf("Invalid email format.\n");
-        return;
+        return; // Exit the function if the email is invalid.
     }
 
-    printf("Enter initial balance: ");
-    scanf("%lf", &newAccount.balance);
+    printf("Enter initial balance: "); // Prompt for the initial balance.
+    scanf("%lf", &newAccount.balance); // Read the balance.
     
-    if (!isValidAmount(newAccount.balance)) {
+    if (!isValidAmount(newAccount.balance)) { // Validate the balance.
         printf("Invalid balance amount. It must be positive.\n");
-        return;
+        return; // Exit the function if the balance is invalid.
     }
 
-    newAccount.numOperations = 0;
+    newAccount.numOperations = 0; // Initialize the number of operations to zero.
 
-    saveAccount(&newAccount);
+    saveAccount(&newAccount); // Save the new account to the file.
 }
 
+// Function to save an account to the file
 void saveAccount(struct Account* acc) {
-    FILE* file = fopen(FILENAME, "ab");
-    if (file == NULL) {
+    FILE* file = fopen(FILENAME, "ab"); // Open file in append binary mode
+    if (file == NULL) { // Check if the file is opened successfully
         printf("Error opening file.\n");
         return;
     }
     
-    fwrite(acc, sizeof(struct Account), 1, file);
-    fclose(file);
+    fwrite(acc, sizeof(struct Account), 1, file); // Write account data to the file
+    fclose(file); // Close the file
 }
 
+// Function to check if an account exists based on account number
 int accountExists(long accountNumber) {
-    FILE* file = fopen(FILENAME, "rb");
-    if (file == NULL) {
+    FILE* file = fopen(FILENAME, "rb"); // Open file in read binary mode
+    if (file == NULL) { // If file doesn't exist, return false
         return 0;
     }
     
     struct Account acc;
-    while (fread(&acc, sizeof(struct Account), 1, file)) {
-        if (acc.accountNumber == accountNumber) {
+    while (fread(&acc, sizeof(struct Account), 1, file)) { // Iterate through all accounts
+        if (acc.accountNumber == accountNumber) { // Check if account number matches
             fclose(file);
-            return 1;
+            return 1; // Account exists
         }
     }
     
-    fclose(file);
-    return 0;
+    fclose(file); // Close the file
+    return 0; // Account doesn't exist
 }
 
+// Function to update account details
 void updateAccount() {
     long accountNumber;
     printf("Enter account number to update: ");
     scanf("%ld", &accountNumber);
 
-    FILE* file = fopen(FILENAME, "rb+");
-    if (file == NULL) {
+    FILE* file = fopen(FILENAME, "rb+"); // Open file in read/write binary mode
+    if (file == NULL) { // Check if the file is opened successfully
         printf("Error opening file.\n");
         return;
     }
 
     struct Account acc;
-    while (fread(&acc, sizeof(struct Account), 1, file)) {
+    while (fread(&acc, sizeof(struct Account), 1, file)) { // Search for the account in the file
         if (acc.accountNumber == accountNumber) {
-            // Update only account number or holder name
-            getchar(); // Consume newline
+            // Update the account's holder name and email
+            getchar(); // Clear the newline
             printf("Enter new account holder name: ");
             fgets(acc.holderName, MAX_NAME_LENGTH, stdin);
-            acc.holderName[strcspn(acc.holderName, "\n")] = 0; // Remove newline
+            acc.holderName[strcspn(acc.holderName, "\n")] = 0; // Remove newline character
 
-            if (!isValidName(acc.holderName)) {
+            if (!isValidName(acc.holderName)) { // Validate the name
                 printf("Invalid name. Only alphabetic characters are allowed.\n");
                 fclose(file);
                 return;
@@ -162,27 +170,18 @@ void updateAccount() {
 
             printf("Enter new email address: ");
             fgets(acc.email, MAX_EMAIL_LENGTH, stdin);
-            acc.email[strcspn(acc.email, "\n")] = 0; // Remove newline
+            acc.email[strcspn(acc.email, "\n")] = 0; // Remove newline character
 
-            if (!isValidEmail(acc.email)) {
+            if (!isValidEmail(acc.email)) { // Validate the email
                 printf("Invalid email format.\n");
                 fclose(file);
                 return;
             }
 
-            // Get the current position of the file pointer
-            long currentPos = ftell(file);
-            if (currentPos == -1) {
-                printf("Error getting file position.\n");
-                fclose(file);
-                return;
-            }
+            // Move the file pointer back to overwrite the account record
+            fseek(file, -sizeof(struct Account), SEEK_CUR);
 
-            // Move the file pointer back to the correct position to write the modified account
-            fseek(file, currentPos - sizeof(struct Account), SEEK_SET);
-
-            // Write the modified account back to the file
-            fwrite(&acc, sizeof(struct Account), 1, file);
+            fwrite(&acc, sizeof(struct Account), 1, file); // Write updated account
             printf("Account updated successfully.\n");
             fclose(file);
             return;
@@ -193,19 +192,19 @@ void updateAccount() {
     fclose(file);
 }
 
-
+// Function to delete an account by account number
 void deleteAccount() {
     long accountNumber;
     printf("Enter account number to delete: ");
     scanf("%ld", &accountNumber);
     
-    FILE* file = fopen(FILENAME, "rb");
+    FILE* file = fopen(FILENAME, "rb"); // Open file in read binary mode
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
     
-    FILE* tempFile = fopen("temp.dat", "wb");
+    FILE* tempFile = fopen("temp.dat", "wb"); // Open temporary file to store accounts
     if (tempFile == NULL) {
         printf("Error opening temporary file.\n");
         fclose(file);
@@ -214,11 +213,11 @@ void deleteAccount() {
     
     struct Account acc;
     int found = 0;
-    while (fread(&acc, sizeof(struct Account), 1, file)) {
+    while (fread(&acc, sizeof(struct Account), 1, file)) { // Iterate through accounts
         if (acc.accountNumber != accountNumber) {
-            fwrite(&acc, sizeof(struct Account), 1, tempFile);
+            fwrite(&acc, sizeof(struct Account), 1, tempFile); // Write non-matching accounts
         } else {
-            found = 1;
+            found = 1; // Mark account for deletion
         }
     }
     
@@ -226,26 +225,25 @@ void deleteAccount() {
     fclose(tempFile);
     
     if (found) {
-        remove(FILENAME);
-        rename("temp.dat", FILENAME);
+        remove(FILENAME); // Remove original file
+        rename("temp.dat", FILENAME); // Replace with temporary file
         printf("Account deleted successfully.\n");
     } else {
         printf("Account not found.\n");
     }
 }
 
+// Function to delete all accounts of a specific holder
 void deleteHolderAccounts() {
     char holderName[MAX_NAME_LENGTH];
     int found = 0;
 
-    // Prompt the user for the holder's name
-    getchar(); // Consume the leftover newline
+    getchar(); // Consume newline
     printf("Enter the holder name to delete all accounts: ");
     fgets(holderName, MAX_NAME_LENGTH, stdin);
-    holderName[strcspn(holderName, "\n")] = 0; // Remove trailing newline
+    holderName[strcspn(holderName, "\n")] = 0; // Remove newline
 
-    // Validate the holder's name
-    if (!isValidName(holderName)) {
+    if (!isValidName(holderName)) { // Validate name
         printf("Invalid name. Only alphabetic characters are allowed.\n");
         return;
     }
@@ -265,12 +263,11 @@ void deleteHolderAccounts() {
 
     struct Account acc;
 
-    // Iterate through all accounts, writing only non-matching ones to the temp file
-    while (fread(&acc, sizeof(struct Account), 1, file)) {
+    while (fread(&acc, sizeof(struct Account), 1, file)) { // Iterate through accounts
         if (strcmp(acc.holderName, holderName) != 0) {
-            fwrite(&acc, sizeof(struct Account), 1, tempFile);
+            fwrite(&acc, sizeof(struct Account), 1, tempFile); // Write non-matching accounts
         } else {
-            found = 1;
+            found = 1; // Mark accounts for deletion
         }
     }
 
@@ -278,97 +275,115 @@ void deleteHolderAccounts() {
     fclose(tempFile);
 
     if (found) {
-        // Replace the original file with the temp file
-        remove(FILENAME);
-        rename("temp.dat", FILENAME);
+        remove(FILENAME); // Remove original file
+        rename("temp.dat", FILENAME); // Replace with temporary file
         printf("All accounts for holder '%s' have been deleted.\n", holderName);
     } else {
-        // If no accounts matched, remove the temp file
-        remove("temp.dat");
+        remove("temp.dat"); // No accounts matched, delete temp file
         printf("No accounts found for holder '%s'.\n", holderName);
     }
 }
 
 
+
+
+// Function to search for an account by account number
 void searchAccount() {
     long accountNumber;
+    
+    // Prompt the user to enter an account number
     printf("Enter account number to search: ");
     scanf("%ld", &accountNumber);
-    
+
+    // Open the file containing account data in binary read mode
     FILE* file = fopen(FILENAME, "rb");
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
-    
+
     struct Account acc;
+
+    // Read each account record from the file and search for the matching account number
     while (fread(&acc, sizeof(struct Account), 1, file)) {
         if (acc.accountNumber == accountNumber) {
+            // If found, display the account details
             displayAccount(&acc);
             fclose(file);
             return;
         }
     }
-    
+
+    // If no match is found, print a message
     printf("Account not found.\n");
     fclose(file);
 }
 
+// Function to display account details
 void displayAccount(struct Account* acc) {
     printf("Account Number: %ld\n", acc->accountNumber);
     printf("Holder Name: %s\n", acc->holderName);
     printf("Email: %s\n", acc->email);
     printf("Balance: %.2f\n", acc->balance);
     printf("Number of Operations: %d\n", acc->numOperations);
+
+    // Loop through and display each operation on the account
     for (int i = 0; i < acc->numOperations; i++) {
         printf("Operation %d: %c %.2f\n", i + 1, acc->operations[i].operation, acc->operations[i].amount);
     }
 }
 
+// Function to display all accounts
 void displayAllAccounts() {
+    // Open the file containing account data in binary read mode
     FILE* file = fopen(FILENAME, "rb");
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
-    
+
     struct Account acc;
+
+    // Read and display each account in the file
     while (fread(&acc, sizeof(struct Account), 1, file)) {
         displayAccount(&acc);
-        printf("\n");
+        printf("\n"); // Separate accounts with a newline
     }
-    
+
     fclose(file);
 }
 
+// Function to add an operation (e.g., deposit or withdrawal) to an account
 void addOperation(long accountNumber, char operation, double amount) {
+    // Open the file in binary read/write mode
     FILE* file = fopen(FILENAME, "rb+");
     if (file == NULL) {
         printf("Error opening file.\n");
         return;
     }
-    
+
     struct Account acc;
+
+    // Search for the account with the specified account number
     while (fread(&acc, sizeof(struct Account), 1, file)) {
         if (acc.accountNumber == accountNumber) {
             if (acc.numOperations < MAX_OPERATIONS) {
+                // Add the operation details to the account
                 acc.operations[acc.numOperations].operation = operation;
                 acc.operations[acc.numOperations].amount = amount;
                 acc.numOperations++;
-                
-                // Move file pointer to the correct position to update the record
-                // Using ftell to get the current position of the file pointer
+
+                // Move the file pointer to the correct position to update the record
                 long currentPos = ftell(file);
                 if (currentPos == -1) {
                     printf("Error getting file position.\n");
                     fclose(file);
                     return;
                 }
-                
-                // Move the file pointer back to the correct position to write the modified account
+
                 fseek(file, currentPos - sizeof(struct Account), SEEK_SET);
-                
-                // Write the modified account back to the file
+
+                // Write the updated account record back to the file
                 fwrite(&acc, sizeof(struct Account), 1, file);
                 printf("Operation added successfully.\n");
                 fclose(file);
@@ -376,42 +391,28 @@ void addOperation(long accountNumber, char operation, double amount) {
             }
         }
     }
-    
+
     printf("Account not found.\n");
     fclose(file);
 }
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-// Assuming the structures and functions (like addAccount, updateAccount, etc.) are already defined above.
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
-// Assuming the structures and functions (like addAccount, updateAccount, etc.) are already defined above.
 
 // Function to clear the input buffer in case of invalid input
 void clearInputBuffer() {
     while (getchar() != '\n'); // Consume invalid input until newline
 }
 
-// Function to read a valid integer choice
+// Function to read a valid integer choice from the user
 int getValidChoice() {
     int choice;
     while (1) {
         if (scanf("%d", &choice) != 1) {
-            printf("Invalid input! Please enter a number between 1 and 7.\n");
+            printf("Invalid input! Please enter a number between 1 and 8.\n");
             clearInputBuffer(); // Clear input buffer
         } else {
-            // Check if the choice is within the valid range
             if (choice >= 1 && choice <= 8) {
                 return choice;
             } else {
-                printf("Invalid choice! Please enter a number between 1 and 7.\n");
+                printf("Invalid choice! Please enter a number between 1 and 8.\n");
             }
         }
     }
@@ -431,76 +432,74 @@ int main() {
         printf("5. Display All Accounts\n");
         printf("6. Add Operation (Deposit/Withdraw)\n");
         printf("7. Delete Holder Accounts\n");
-        printf("8. Exit\n\n"); 
+        printf("8. Exit\n\n");
 
-        // Validate user input for menu choice
+        // Prompt user for menu choice
         printf("Enter your choice: ");
-        choice = getValidChoice(); // Get a valid choice
+        choice = getValidChoice(); // Validate input
 
-        // Handle the user's choice
+        // Handle user choice
         switch (choice) {
             case 1:
-                addAccount();  // Add a new account
+                addAccount(); // Add a new account
                 break;
             case 2:
-                updateAccount();  // Update an existing account
+                updateAccount(); // Update an existing account
                 break;
             case 3:
-                deleteAccount();  // Delete an account
+                deleteAccount(); // Delete an account
                 break;
             case 4:
-                searchAccount();  // Search for an account by account number
+                searchAccount(); // Search for an account by account number
                 break;
             case 5:
-                displayAllAccounts();  // Display all accounts
+                displayAllAccounts(); // Display all accounts
                 break;
-            case 6:
-                {
-                    long accountNumber;
-                    char operation;
-                    double amount;
+            case 6: {
+                long accountNumber;
+                char operation;
+                double amount;
 
-                    // Ask for account number, operation type, and amount
-                    printf("Enter account number: ");
-                    if (scanf("%ld", &accountNumber) != 1) {
-                        printf("Invalid account number.\n");
-                        clearInputBuffer(); // Clear input buffer
-                        break;
-                    }
-                    clearInputBuffer(); // Consume newline
-
-                    printf("Enter operation (d for deposit, w for withdraw): ");
-                    if (scanf("%c", &operation) != 1 || (operation != 'd' && operation != 'w')) {
-                        printf("Invalid operation. Only 'd' for deposit and 'w' for withdraw are allowed.\n");
-                        clearInputBuffer(); // Clear input buffer
-                        break;
-                    }
-
-                    clearInputBuffer(); // Consume newline
-
-                    printf("Enter amount: ");
-                    if (scanf("%lf", &amount) != 1 || !isValidAmount(amount)) {
-                        printf("Invalid amount. It must be positive.\n");
-                        clearInputBuffer(); // Clear input buffer
-                        break;
-                    }
-
-                    addOperation(accountNumber, operation, amount);  // Add operation (deposit or withdraw)
+                // Prompt for account number
+                printf("Enter account number: ");
+                if (scanf("%ld", &accountNumber) != 1) {
+                    printf("Invalid account number.\n");
+                    clearInputBuffer();
+                    break;
                 }
+                clearInputBuffer();
+
+                // Prompt for operation type
+                printf("Enter operation (d for deposit, w for withdraw): ");
+                if (scanf("%c", &operation) != 1 || (operation != 'd' && operation != 'w')) {
+                    printf("Invalid operation. Only 'd' for deposit and 'w' for withdraw are allowed.\n");
+                    clearInputBuffer();
+                    break;
+                }
+                clearInputBuffer();
+
+                // Prompt for amount
+                printf("Enter amount: ");
+                if (scanf("%lf", &amount) != 1 || !isValidAmount(amount)) {
+                    printf("Invalid amount. It must be positive.\n");
+                    clearInputBuffer();
+                    break;
+                }
+
+                addOperation(accountNumber, operation, amount); // Add operation
                 break;
+            }
             case 7:
-                deleteHolderAccounts();  // Delete all accounts for a holder name
+                deleteHolderAccounts(); // Delete all accounts for a holder name
                 break;
             case 8:
-                 printf("Exiting program.\n");
-                exit(0);  // Exit the program
+                printf("Exiting program.\n");
+                exit(0); // Exit program
                 break;
             default:
                 printf("Invalid choice, please try again.\n");
         }
     }
 
-    return 0;  // Return 0 to indicate successful completion
+    return 0;
 }
-
-
