@@ -355,7 +355,11 @@ void displayAllAccounts() {
 
 // Function to add an operation (e.g., deposit or withdrawal) to an account
 void addOperation(long accountNumber, char operation, double amount) {
-    // Open the file in binary read/write mode
+    if (amount <= 0) {
+        printf("Invalid amount. It must be a positive value.\n");
+        return;
+    }
+
     FILE* file = fopen(FILENAME, "rb+");
     if (file == NULL) {
         printf("Error opening file.\n");
@@ -363,38 +367,60 @@ void addOperation(long accountNumber, char operation, double amount) {
     }
 
     struct Account acc;
+    int found = 0;
 
     // Search for the account with the specified account number
     while (fread(&acc, sizeof(struct Account), 1, file)) {
         if (acc.accountNumber == accountNumber) {
-            if (acc.numOperations < MAX_OPERATIONS) {
-                // Add the operation details to the account
-                acc.operations[acc.numOperations].operation = operation;
-                acc.operations[acc.numOperations].amount = amount;
-                acc.numOperations++;
+            found = 1;
 
-                // Move the file pointer to the correct position to update the record
-                long currentPos = ftell(file);
-                if (currentPos == -1) {
-                    printf("Error getting file position.\n");
+            if (operation == 'd') {
+                // Deposit: Increase the balance
+                acc.balance += amount;
+                printf("Deposit successful! New balance: %.2f\n", acc.balance);
+            } else if (operation == 'w') {
+                // Withdrawal: Ensure balance is sufficient
+                if (amount > acc.balance) {
+                    printf("Withdrawal failed! Insufficient balance. Current balance: %.2f\n", acc.balance);
                     fclose(file);
                     return;
                 }
-
-                fseek(file, currentPos - sizeof(struct Account), SEEK_SET);
-
-                // Write the updated account record back to the file
-                fwrite(&acc, sizeof(struct Account), 1, file);
-                printf("Operation added successfully.\n");
+                acc.balance -= amount;
+                printf("Withdrawal successful! New balance: %.2f\n", acc.balance);
+            } else {
+                printf("Invalid operation. Use 'd' for deposit or 'w' for withdrawal.\n");
                 fclose(file);
                 return;
             }
+
+            // Add the operation details
+            if (acc.numOperations < MAX_OPERATIONS) {
+                acc.operations[acc.numOperations].operation = operation;
+                acc.operations[acc.numOperations].amount = amount;
+                acc.numOperations++;
+            } else {
+                printf("Operation limit reached for this account.\n");
+                fclose(file);
+                return;
+            }
+
+            // Move the file pointer back to overwrite the account record
+            fseek(file, -sizeof(struct Account), SEEK_CUR);
+
+            // Write the updated account back to the file
+            fwrite(&acc, sizeof(struct Account), 1, file);
+            fclose(file);
+            return;
         }
     }
 
-    printf("Account not found.\n");
+    if (!found) {
+        printf("Account not found.\n");
+    }
+
     fclose(file);
 }
+
 
 // Function to clear the input buffer in case of invalid input
 void clearInputBuffer() {
