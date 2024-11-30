@@ -2,46 +2,13 @@
 #include <stdlib.h>   // Provides functions for memory allocation, process control, conversions, etc. (e.g., malloc, exit).
 #include <string.h>   // Provides functions to handle strings (e.g., strlen, strcpy, strcmp).
 #include <ctype.h>    // Provides character handling functions (e.g., isalpha, isdigit).
-
+#include "header.h"
 // Define the maximum length for names and email strings.
 #define MAX_NAME_LENGTH 100   // Maximum length for a holder's name.
 #define MAX_EMAIL_LENGTH 100  // Maximum length for an email address.
 #define MAX_OPERATIONS 100    // Maximum number of operations (e.g., deposits/withdrawals) per account.
 #define FILENAME "accounts.dat" // Name of the binary file used to store account information.
 
-// Define the structure for each operation (deposit or withdrawal).
-struct Operation {
-    char operation; // Operation type: 'd' for deposit, 'w' for withdrawal.
-    double amount;  // Amount of the operation.
-};
-
-// Define the structure for the bank account.
-struct Account {
-    long accountNumber;                  // Unique account number.
-    double balance;                      // Current account balance.
-    char holderName[MAX_NAME_LENGTH];    // Name of the account holder.
-    char email[MAX_EMAIL_LENGTH];       // Email address of the account holder.
-    int numOperations;                  // Number of operations performed on the account.
-    struct Operation operations[MAX_OPERATIONS]; // Array to store operations.
-};
-
-// Function prototypes to declare functions used in the program.
-int isValidName(char* name);               // Check if a name is valid (only alphabetic and spaces).
-int isValidEmail(char* email);             // Check if an email format is valid.
-int isValidAmount(double amount);          // Check if an amount is valid (positive value).
-void addAccount();                         // Add a new account to the system.
-void updateAccount();                      // Update details of an existing account.
-void deleteAccount();                      // Delete a specific account by account number.
-void deleteHolderAccounts();               // Delete all accounts associated with a holder's name.
-void searchAccount();                      // Search for an account by its account number.
-void displayAllAccounts();                 // Display all accounts stored in the system.
-void addOperation(long accountNumber, char operation, double amount); // Add a deposit or withdrawal operation to an account.
-void saveAccount(struct Account* acc);     // Save an account to the binary file.
-int accountExists(long accountNumber);     // Check if an account exists in the system.
-void loadAccounts();                       // Load accounts from the binary file.
-void displayAccount(struct Account* acc);  // Display details of a specific account.
-
-// Implementation of the function to validate a name.
 int isValidName(char* name) {
     for (int i = 0; i < strlen(name); i++) { // Iterate through each character in the name.
         if (!isalpha(name[i]) && name[i] != ' ') { // Check if character is alphabetic or a space.
