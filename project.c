@@ -30,7 +30,7 @@ int isValidEmail(char* email) {
 
 // Implementation of the function to validate a monetary amount.
 int isValidAmount(double amount) {
-    return amount > 0; // Return true if the amount is positive.
+    return amount >= 0; // Return true if the amount is positive.
 }
 
 // Implementation of the function to add a new account.
