@@ -3,10 +3,7 @@
 #include <string.h>   // Provides functions to handle strings (e.g., strlen, strcpy, strcmp).
 #include <ctype.h>    // Provides character handling functions (e.g., isalpha, isdigit).
 #include "header.h"
-// Define the maximum length for names and email strings.
-#define MAX_NAME_LENGTH 100   // Maximum length for a holder's name.
-#define MAX_EMAIL_LENGTH 100  // Maximum length for an email address.
-#define MAX_OPERATIONS 100    // Maximum number of operations (e.g., deposits/withdrawals) per account.
+
 #define FILENAME "accounts.dat" // Name of the binary file used to store account information.
 
 int isValidName(char* name) {
